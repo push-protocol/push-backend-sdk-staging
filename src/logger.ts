@@ -1,5 +1,5 @@
 import winston from 'winston';
-import 'winston-daily-rotate-file';
+// import 'winston-daily-rotate-file';
 const moment = require('moment'); // time library
 
 const customLevels = {
@@ -71,7 +71,6 @@ const formatter = winston.format.combine(
 
 const transports = [];
 transports.push(
-  transport,
   new winston.transports.Console({
     format: formatter,
   }),
