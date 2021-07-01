@@ -1,7 +1,7 @@
 {
-  "name": "@epnsproject/backend-sdk",
+  "name": "@epnsproject/backend-sdk-staging",
   "version": "1.0.19",
-  "description": "SDK for sending notifications on EPNS",
+  "description": "SDK staging for sending notifications on EPNS",
   "scripts": {
     "git": "func() { git add . && git commit -m \"$1\" && git push origin HEAD; }; func",
     "test": "echo \"Error: no test specified\" && exit 1",
