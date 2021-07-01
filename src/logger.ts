@@ -63,11 +63,11 @@ const formatter = winston.format.combine(
   }),
 );
 
-var transport = new winston.transports.DailyRotateFile(options.file);
-transport.on('rotate', function (oldFilename, newFilename) {
-  // do something fun
-  console.log('login rotated from: %o | %o', oldFilename, newFilename);
-});
+// var transport = new winston.transports.DailyRotateFile(options.file);
+// transport.on('rotate', function (oldFilename, newFilename) {
+//   // do something fun
+//   console.log('login rotated from: %o | %o', oldFilename, newFilename);
+// });
 
 const transports = [];
 transports.push(
