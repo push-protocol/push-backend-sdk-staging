@@ -41,6 +41,7 @@ export default class NotificationHelper {
   private network: NetWorkSettings;
   private epnsSettings: EPNSSettings;
   private epns;
+  private epnsCommunicator;
   // private infura: InfuraSettings
   // private alchemy: string;
   // private etherscan: string;
@@ -50,7 +51,7 @@ export default class NotificationHelper {
    * @param channelKey Channel private key
    * @param epnsSettings Network of epns contract
    */
-  constructor(web3network: string, channelKey: string, network: NetWorkSettings, epnsSettings: EPNSSettings) {
+  constructor(web3network: string, channelKey: string, network: NetWorkSettings, epnsSettings: EPNSSettings, epnsCommunicatorSettings: EPNSSettings) {
     this.channelKey = channelKey;
     this.web3network = web3network;
     this.epnsSettings = epnsSettings;
@@ -61,6 +62,7 @@ export default class NotificationHelper {
       throw new Error('Initialize using an alchemy key or Infura parameters');
     }
     this.epns = getEPNSInteractableContract(epnsSettings, channelKey, network.etherscan, network.alchemy, network.infura);
+    this.epnsCommunicator = getEPNSInteractableContract(epnsCommunicatorSettings, channelKey, network.etherscan, network.alchemy, network.infura);
   }
 
   public advanced = epnsNotify;
@@ -125,7 +127,7 @@ export default class NotificationHelper {
     const txConfirmWait = 1; // Wait for 0 tx confirmation
 
     const tx = await epnsNotify.sendNotification(
-      this.epns.signingContract, // Contract connected to signing wallet
+      this.epnsCommunicator.signingContract, // Contract connected to signing wallet
       user, // Recipient to which the payload should be sent
       payloadType, // Notification Type
       storageType, // Notificattion Storage Type
