@@ -35,12 +35,14 @@ export interface EPNSSettings {
   contractABI: string;
 }
 
+export type NotificationNetworkType = "polygon" | "ropsten";
+
 export default class NotificationHelper {
   private channelKey: string;
   private web3network: string;
   private network: NetWorkSettings;
   private epnsSettings: EPNSSettings;
-  private epns;
+  private epnsCore;
   private epnsCommunicator;
   // private infura: InfuraSettings
   // private alchemy: string;
@@ -51,17 +53,17 @@ export default class NotificationHelper {
    * @param channelKey Channel private key
    * @param epnsSettings Network of epns contract
    */
-  constructor(web3network: string, channelKey: string, network: NetWorkSettings, epnsSettings: EPNSSettings, epnsCommunicatorSettings: EPNSSettings) {
+  constructor(web3network: string, channelKey: string, network: NetWorkSettings, epnsCoreSettings: EPNSSettings, epnsCommunicatorSettings: EPNSSettings) {
     this.channelKey = channelKey;
     this.web3network = web3network;
-    this.epnsSettings = epnsSettings;
+    this.epnsSettings = epnsCoreSettings;
     this.network = network;
     // if (network.alchemy) this.alchemy = network.alchemy
     // if (network.infura) this.infura = network.infura
     if (!network.alchemy && !network.infura) {
       throw new Error('Initialize using an alchemy key or Infura parameters');
     }
-    this.epns = getEPNSInteractableContract(epnsSettings, channelKey, network.etherscan, network.alchemy, network.infura);
+    this.epnsCore = getEPNSInteractableContract(epnsCoreSettings, channelKey, network.etherscan, network.alchemy, network.infura);
     this.epnsCommunicator = getEPNSInteractableContract(epnsCommunicatorSettings, channelKey, network.etherscan, network.alchemy, network.infura);
   }
 
@@ -74,12 +76,12 @@ export default class NotificationHelper {
    */
   async getSubscribedUsers() {
     const channelAddress = ethers.utils.computeAddress(this.channelKey);
-    const channelInfo = await this.epns.contract.channels(channelAddress);
-    const filter = this.epns.contract.filters.Subscribe(channelAddress);
+    const channelInfo = await this.epnsCore.contract.channels(channelAddress);
+    const filter = this.epnsCore.contract.filters.Subscribe(channelAddress);
     let startBlock = channelInfo.channelStartBlock.toNumber();
 
     //Function to get all the addresses in the channel
-    const eventLog = await this.epns.contract.queryFilter(filter, startBlock);
+    const eventLog = await this.epnsCore.contract.queryFilter(filter, startBlock);
     const users = eventLog.map((log: any) => log.args.user);
     return users;
   }
@@ -126,8 +128,11 @@ export default class NotificationHelper {
     const storageType = 1; // IPFS Storage Type
     const txConfirmWait = 1; // Wait for 0 tx confirmation
 
+    const channelAddress = ethers.utils.computeAddress(this.channelKey);
+    console.log(this.epnsCommunicator.signingContract)
     const tx = await epnsNotify.sendNotification(
       this.epnsCommunicator.signingContract, // Contract connected to signing wallet
+      channelAddress,
       user, // Recipient to which the payload should be sent
       payloadType, // Notification Type
       storageType, // Notificattion Storage Type
