@@ -1,3 +1,4 @@
+import {postReq} from './config/axios';
 import epnsNotify from './epnsNotifyHelper';
 import { ethers } from 'ethers';
 import logger from './logger';
@@ -76,14 +77,18 @@ export default class NotificationHelper {
    */
   async getSubscribedUsers() {
     const channelAddress = ethers.utils.computeAddress(this.channelKey);
-    const channelInfo = await this.epnsCore.contract.channels(channelAddress);
-    const filter = this.epnsCore.contract.filters.Subscribe(channelAddress);
-    let startBlock = channelInfo.channelStartBlock.toNumber();
-
-    //Function to get all the addresses in the channel
-    const eventLog = await this.epnsCore.contract.queryFilter(filter, startBlock);
-    const users = eventLog.map((log: any) => log.args.user);
-    return users;
+    const channelSubscribers = await postReq('/channels/get_subscribers',{
+      "channel": channelAddress
+    })
+    .then((res:any) => {
+      const { subscribers } = res.data;
+      return subscribers;
+    })
+    .catch((err) => {
+      console.log({err});
+      return []
+    })
+    return channelSubscribers;
   }
 
   async getContract(address: string, abi: string) {
@@ -129,7 +134,6 @@ export default class NotificationHelper {
     const txConfirmWait = 1; // Wait for 0 tx confirmation
 
     const channelAddress = ethers.utils.computeAddress(this.channelKey);
-    console.log(this.epnsCommunicator.signingContract)
     const tx = await epnsNotify.sendNotification(
       this.epnsCommunicator.signingContract, // Contract connected to signing wallet
       channelAddress,
