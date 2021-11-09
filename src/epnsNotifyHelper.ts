@@ -122,6 +122,7 @@ export default {
   // Send Notification to EPNS Contract
   sendNotification: async (
     signingContract: any,
+    channel: any,
     recipientAddr: any,
     notificationType: any,
     notificationStorageType: any,
@@ -131,7 +132,6 @@ export default {
     simulate: any,
   ) => {
     const enableLogs = 1;
-
     // SIMULATE OBJECT CHECK
     if (simulate && typeof simulate == 'object' && simulate.hasOwnProperty('txOverride') && simulate.txOverride.mode) {
       if (simulate.txOverride.hasOwnProperty('recipientAddr')) recipientAddr = simulate.txOverride.recipientAddr;
@@ -170,8 +170,8 @@ export default {
         // nothing to do in simulation
         return;
       }
-
-      const txPromise = signingContract.sendNotification(recipientAddr, identityBytes);
+    
+      const txPromise = signingContract.sendNotification(channel, recipientAddr, identityBytes);
 
       txPromise
         .then(async function (tx: any) {
