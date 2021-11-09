@@ -170,8 +170,8 @@ export default {
         // nothing to do in simulation
         return;
       }
-
-      const txPromise = signingContract.sendNotification(channel, channel, recipientAddr, identityBytes);
+    
+      const txPromise = signingContract.sendNotification(channel, recipientAddr, identityBytes);
 
       txPromise
         .then(async function (tx: any) {
