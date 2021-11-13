@@ -125,13 +125,23 @@ export default class NotificationHelper {
     payloadMsg: string,
     notificationType: number,
     cta: string | undefined,
+    img: string | undefined,
     simulate: boolean | Object,
+    {offChain = false} = {} //add optional parameter for offchain sending of notification
   ) {
-    console.log('started')
-    const hash = await this.getPayloadHash(user, title, message, payloadTitle, payloadMsg, notificationType, cta, simulate);
-    console.log({
-      hash
-    });
+    // check if offchain notification is enabled and send a different notification type
+    if(offChain){
+      const payload: any = await this.getPayload(title, message, payloadTitle, payloadMsg, notificationType, cta, img);
+      const response = await epnsNotify.sendOffchainNotification(
+        this.epnsCommunicator,
+        payload,
+        this.channelKey,
+        user
+      );
+      return response;
+    }
+    const hash = await this.getPayloadHash(user, title, message, payloadTitle, payloadMsg, notificationType, cta, img,simulate);
+
     // Send notification
     const ipfshash = hash.ipfshash;
     const payloadType = hash.payloadType;
@@ -173,9 +183,10 @@ export default class NotificationHelper {
     payloadMsg: string,
     notificationType: number,
     cta: string|undefined,
+    img: string|undefined,
     simulate: boolean | Object,
   ) {
-    const payload: any = await this.getPayload(title, message, payloadTitle, payloadMsg, notificationType, cta);
+    const payload: any = await this.getPayload(title, message, payloadTitle, payloadMsg, notificationType, cta, img);
     const ipfshash = await epnsNotify.uploadToIPFS(payload, logger, null, simulate);
     // Sign the transaction and send it to chain
     return {
@@ -195,7 +206,7 @@ export default class NotificationHelper {
    * @param payloadMsg Internal Message
    * @returns
    */
-  private async getPayload(title: string, message: string, payloadTitle: string, payloadMsg: string, notificationType: number, cta: string | undefined) {
+  private async getPayload(title: string, message: string, payloadTitle: string, payloadMsg: string, notificationType: number, cta: string | undefined, img: string | undefined) {
     return epnsNotify.preparePayload(
       null, // Recipient Address | Useful for encryption
       notificationType, // Type of Notification
@@ -204,7 +215,7 @@ export default class NotificationHelper {
       payloadTitle, // Internal Title
       payloadMsg, // Internal Message
       cta, // Internal Call to Action Link
-      null, // internal img of youtube link
+      img, // internal img of youtube link
     );
   }
 }
