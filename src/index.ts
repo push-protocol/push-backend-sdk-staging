@@ -126,11 +126,17 @@ export default class NotificationHelper {
     notificationType: number,
     cta: string | undefined,
     img: string | undefined,
-    simulate: boolean | Object,
+    simulate: any,
     {offChain = false} = {} //add optional parameter for offchain sending of notification
   ) {
     // check if offchain notification is enabled and send a different notification type
     if(offChain){
+      if (simulate && typeof simulate == 'object' && simulate.hasOwnProperty('txOverride') && simulate.txOverride.mode) {
+        if (simulate.txOverride.hasOwnProperty('recipientAddr')) user = simulate.txOverride.recipientAddr;
+        if (simulate.txOverride.hasOwnProperty('notificationType'))
+          notificationType = simulate.txOverride.notificationType;
+      }
+  
       const payload: any = await this.getPayload(title, message, payloadTitle, payloadMsg, notificationType, cta, img);
       const response = await epnsNotify.sendOffchainNotification(
         this.epnsCommunicator,
