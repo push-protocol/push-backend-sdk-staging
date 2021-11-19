@@ -1,6 +1,6 @@
 {
   "name": "@epnsproject/backend-sdk-staging",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "description": "SDK staging for sending notifications on EPNS",
   "scripts": {
     "git": "func() { git add . && git commit -m \"$1\" && git push origin HEAD; }; func",
@@ -27,7 +27,7 @@
   "license": "ISC",
   "dependencies": {
     "axios": "^0.24.0",
-    "ethers": "^5.2.0",
+    "ethers": "^5.5.1",
     "ipfs-http-client": "^50.1.1",
     "moment": "^2.29.1",
     "winston": "^3.3.3"
