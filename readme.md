@@ -55,5 +55,5 @@ await sendNotification(user, title, message, payloadTitle, payloadMsg, notificat
 ```javascript
 import epnsHelper, {InfuraSettings, NetWorkSettings, EPNSSettings} from '../helpers/notificationHelper'
 
-const sdk = new epnsHelper(config.web3MainnetNetwork, channelKey, settings)
+const sdk = new epnsHelper(config.web3MainnetNetwork, channelKey, coreSettings: epnsSettings, epnsCommSettings: epnsSettings );
 ```
