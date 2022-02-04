@@ -139,7 +139,7 @@ export default class NotificationHelper {
           notificationType = simulate.txOverride.notificationType;
       }
   
-      const payload: any = await this.getPayload(title, message, payloadTitle, payloadMsg, notificationType, cta, img);
+      const payload: any = await this.getPayload(title, message, payloadTitle, payloadMsg, notificationType, cta, img, null);
       const response = await epnsNotify.sendOffchainNotification(
         this.epnsCommunicator,
         payload,
@@ -158,6 +158,7 @@ export default class NotificationHelper {
     const storageType = 1; // IPFS Storage Type
     const txConfirmWait = 1; // Wait for 0 tx confirmation
 
+    //const channelAddress = ethers.utils.computeAddress(this.channelKey);
     console.log({channelAddress});
     const tx = await epnsNotify.sendNotification(
       this.epnsCommunicator.signingContract, // Contract connected to signing wallet
@@ -194,7 +195,8 @@ export default class NotificationHelper {
     img: string|undefined,
     simulate: boolean | Object,
   ) {
-    const payload: any = await this.getPayload(title, message, payloadTitle, payloadMsg, notificationType, cta, img);
+    const payload: any = await this.getPayload(title, message, payloadTitle, payloadMsg, notificationType, cta, img, user);
+
     const ipfshash = await epnsNotify.uploadToIPFS(payload, logger, null, simulate);
     // Sign the transaction and send it to chain
     return {
@@ -214,9 +216,9 @@ export default class NotificationHelper {
    * @param payloadMsg Internal Message
    * @returns
    */
-  private async getPayload(title: string, message: string, payloadTitle: string, payloadMsg: string, notificationType: number, cta: string | undefined, img: string | undefined) {
+  private async getPayload(title: string, message: string, payloadTitle: string, payloadMsg: string, notificationType: number, cta: string | undefined, img: string | undefined, user: string | null | undefined) {
     return epnsNotify.preparePayload(
-      null, // Recipient Address | Useful for encryption
+      user, // Recipient Address | Useful for encryption
       notificationType, // Type of Notification
       title, // Title of Notification
       message, // Message of Notification
