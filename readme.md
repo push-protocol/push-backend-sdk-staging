@@ -58,7 +58,7 @@ new EpnsSDK(
 		channelAddress = null,
 		networkKeys = DEFAULT_NETWORK_SETTINGS,
 		notificationChainId = DEFAULT_NOTIFICATION_CHAIN,
-} = {},
+	} = {}
 )
 ```
 | Parameter | Description  | Default Value| 
