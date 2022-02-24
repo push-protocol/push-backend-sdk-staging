@@ -1,6 +1,6 @@
 {
   "name": "@epnsproject/backend-sdk-staging",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "SDK staging for sending notifications on EPNS",
   "scripts": {
     "git": "func() { git add . && git commit -m \"$1\" && git push origin HEAD; }; func",
