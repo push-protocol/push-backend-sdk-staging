@@ -159,8 +159,8 @@ export default {
     deployedContractABI: any,
   ) => {
     const enableLogs = 0;
-
-    const provider = ethers.getDefaultProvider(network, {
+    const parsedNetwork = parseInt(network) ? parseInt(network) : network; // if chainId is 
+    const provider = ethers.getDefaultProvider(parsedNetwork, {
       etherscan: apiKeys.etherscanAPI ? apiKeys.etherscanAPI : null,
       infura: apiKeys.infuraAPI
         ? { projectId: apiKeys.infuraAPI.projectID, projectSecret: apiKeys.infuraAPI.projectSecret }
