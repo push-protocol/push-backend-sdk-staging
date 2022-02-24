@@ -43,9 +43,10 @@ export interface EPNSSettings {
   contractABI: string;
 }
 
-export type SupportedChains = '42' | '80001' | "1" | "137";
+export type SupportedChains = '42' | '80001' | '1' | '137';
 const DEFAULT_NETWORK_SETTINGS: NetWorkSettings = {};
 const DEFAULT_NOTIFICATION_CHAIN: SupportedChains = '42';
+const DEFAULT_NETWORK_TO_MONITOR = '1';
 
 export default class NotificationHelper {
   private channelKey: string;
@@ -53,6 +54,7 @@ export default class NotificationHelper {
   private epnsCommunicatorSettings: EPNSSettings;
   private channelAddress;
   private epnsCommunicator;
+  private networkToMonitor;
   /**
    *
    * @param channelKey Channel private key
@@ -66,10 +68,13 @@ export default class NotificationHelper {
       channelAddress = '',
       networkKeys = DEFAULT_NETWORK_SETTINGS,
       notificationChainId = DEFAULT_NOTIFICATION_CHAIN,
+      networkToMonitor = DEFAULT_NETWORK_TO_MONITOR,
     } = {},
   ) {
-    communicatorContractAddress = communicatorContractAddress || config.communicatorContractAddress[notificationChainId];
+    communicatorContractAddress =
+      communicatorContractAddress || config.communicatorContractAddress[notificationChainId];
     this.channelKey = channelKey;
+    this.networkToMonitor = networkToMonitor;
     this.channelAddress = channelAddress || ethers.utils.computeAddress(channelKey);
     this.network = networkKeys;
     this.epnsCommunicatorSettings = {
@@ -111,9 +116,12 @@ export default class NotificationHelper {
     return channelSubscribers;
   }
 
-  async getContract(chainId: string, address: string, abi: string) {
+  async getContract(address: string, abi: string) {
+    if (!this.epnsCommunicator) {
+      console.log('You didnt pass in your network keys, so your functionality with this contract will be limited');
+    }
     return epnsNotify.getInteractableContracts(
-      chainId, // Network for which the interactable contract is req
+      this.networkToMonitor, // Network for which the interactable contract is req
       {
         // API Keys
         etherscanAPI: this.network.etherscan,
