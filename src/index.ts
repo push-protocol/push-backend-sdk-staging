@@ -1,4 +1,4 @@
-import { postReq } from './config/axios';
+import { postReq, getReq } from './config/axios';
 import epnsNotify from './epnsNotifyHelper';
 import { ethers } from 'ethers';
 import logger from './logger';
