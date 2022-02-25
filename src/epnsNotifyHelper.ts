@@ -1,10 +1,11 @@
+import axios from 'axios';
 import { ethers } from 'ethers';
 import { EPNSSettings } from '.';
 import config from './config';
 import { postReq } from './config/axios';
 
 export default {
-  sendOffchainNotification: async (
+  generateOffChainSignature: async (
     communicatorDetails: EPNSSettings,
     payload: any,
     channelPrivateKey: any,
@@ -20,7 +21,7 @@ export default {
 
     const DOMAIN = {
       name: 'EPNS COMM V1',
-      chainId: 42,
+      chainId: parseInt(chainId),
       verifyingContract,
     };
     const TYPE = {
@@ -46,13 +47,17 @@ export default {
       payload,
       op: 'write',
     };
+    return backendPayload;
+  },
 
+  sendOffchainNotification: async (backendPayload: any) => {
     return postReq('/payloads/add_manual_payload', { ...backendPayload })
-      .then(({ data }) => {
-        return data;
+      .then(({ data, status }) => {
+        return { ...data, statusCode: status };
       })
       .catch((err) => {
-        return err.message;
+        const { status, message } = JSON.parse(JSON.stringify(err));
+        return { statusCode: status, message: message, retry: !Boolean(status) || `${status}`.startsWith('5') };
       });
     // make api request
   },
@@ -159,7 +164,7 @@ export default {
     deployedContractABI: any,
   ) => {
     const enableLogs = 0;
-    const parsedNetwork = parseInt(network) ? parseInt(network) : network; // if chainId is 
+    const parsedNetwork = parseInt(network) ? parseInt(network) : network; // if chainId is
     const provider = ethers.getDefaultProvider(parsedNetwork, {
       etherscan: apiKeys.etherscanAPI ? apiKeys.etherscanAPI : null,
       infura: apiKeys.infuraAPI

@@ -153,7 +153,7 @@ export default class NotificationHelper {
     cta: string | undefined,
     img: string | undefined,
     simulate: any,
-    { offChain = true } = {}, //add optional parameter for offchain sending of notification
+    { offChain = true, returnPayload = false } = {}, //add optional parameter for offchain sending of notification
   ) {
     const channelAddress = this.channelAddress;
     // check if offchain notification is enabled and send a different notification type
@@ -179,13 +179,18 @@ export default class NotificationHelper {
         img,
         null,
       );
-      const response = await epnsNotify.sendOffchainNotification(
+
+      const offChainPayload = await epnsNotify.generateOffChainSignature(
         this.epnsCommunicatorSettings,
         payload,
         this.channelKey,
         user,
         channelAddress,
       );
+      if (returnPayload) return offChainPayload;
+
+      const response = await epnsNotify.sendOffchainNotification(offChainPayload);
+
       return response;
     }
     // if its not offchain, then require key parameters be passed in
