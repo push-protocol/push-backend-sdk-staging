@@ -138,7 +138,7 @@ export default class NotificationHelper {
   /**
    * Send Notification V2
    * @description Sends notification Options version
-   * @param options User Address
+   * @param options
    */
   public async sendNotificationV2(options : SendNotificationOptionsType) {
     const {
