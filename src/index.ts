@@ -150,13 +150,13 @@ export default class NotificationHelper {
       notificationType,
       cta,
       img,
-      simulate,
+      simulate = null,
       offChain = true,
       returnPayload = false
     } = options;
 
     // call the original "sendNotification()"
-    this.sendNotification(
+    return this.sendNotification(
       user,
       title,
       message,

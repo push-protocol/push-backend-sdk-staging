@@ -7,7 +7,7 @@ export interface SendNotificationOptionsType {
     notificationType: number,
     cta?: string,
     img?: string,
-    simulate: any,
+    simulate?: any,
     offChain?: boolean,
     returnPayload?: boolean
 }
