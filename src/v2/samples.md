@@ -24,59 +24,59 @@ const NOTIFICATION_TYPE = {
 const OPTIONS = {
     TARGETTED: {
       signer,
-        chainId: 42,
-        type: NOTIFICATION_TYPE.TARGETTED,
-        storage: 2,
-        notification: {
-            title: 'sample header',
-            body: 'testing out the new send notifications'
-        },
-        payload: {
-            title: 'test notification title',
-            body: 'test notif body',
-            cta: '',
-            img: ''
-        },
-        recipients: '0xCdBE6D076e05c5875D90fa35cc85694E1EAFBBd1',
-        channel: channelAddress,
-        dev: true
+      chainId: 42,
+      type: NOTIFICATION_TYPE.TARGETTED,
+      storage: 2,
+      notification: {
+          title: 'sample header',
+          body: 'testing out the new send notifications'
+      },
+      payload: {
+          title: 'test notification title',
+          body: 'test notif body',
+          cta: '',
+          img: ''
+      },
+      recipients: '0xCdBE6D076e05c5875D90fa35cc85694E1EAFBBd1',
+      channel: channelAddress,
+      dev: true
     },
     SUBSET: {
-        signer,
-        chainId: 42,
-        type: NOTIFICATION_TYPE.SUBSET,
-        storage: 2,
-        notification: {
-            title: 'sample header',
-            body: 'testing out the new send notifications subset'
-        },
-        payload: {
-            title: 'test notification title subset',
-            body: 'test notif body',
-            cta: '',
-            img: ''
-        },
-        recipients: ['0xCdBE6D076e05c5875D90fa35cc85694E1EAFBBd1', '0x1434A7882cDD877B398Df5b83c883e9571c65813'],
-        channel: channelAddress,
-        dev: true
+      signer,
+      chainId: 42,
+      type: NOTIFICATION_TYPE.SUBSET,
+      storage: 2,
+      notification: {
+          title: 'sample header',
+          body: 'testing out the new send notifications subset'
+      },
+      payload: {
+          title: 'test notification title subset',
+          body: 'test notif body',
+          cta: '',
+          img: ''
+      },
+      recipients: ['0xCdBE6D076e05c5875D90fa35cc85694E1EAFBBd1', '0x1434A7882cDD877B398Df5b83c883e9571c65813'],
+      channel: channelAddress,
+      dev: true
     },
     BROADCAST: {
-        signer,
-        chainId: 42,
-        type: NOTIFICATION_TYPE.BROADCAST,
-        storage: 2,
-        notification: {
-            title: 'sample header',
-            body: 'testing out the new send notifications broadcast'
-        },
-        payload: {
-            title: 'test notification title broadcast',
-            body: 'test notif body',
-            cta: '',
-            img: ''
-        },
-        channel: channelAddress,
-        dev: true
+      signer,
+      chainId: 42,
+      type: NOTIFICATION_TYPE.BROADCAST,
+      storage: 2,
+      notification: {
+          title: 'sample header',
+          body: 'testing out the new send notifications broadcast'
+      },
+      payload: {
+          title: 'test notification title broadcast',
+          body: 'test notif body',
+          cta: '',
+          img: ''
+      },
+      channel: channelAddress,
+      dev: true
     }
 };
 

@@ -1,4 +1,5 @@
 import CryptoJS from 'crypto-js';
+import { v4 as uuidv4 } from 'uuid';
 import CONFIG, { 
   ETH_MAINNET, 
   POLYGON_MAINNET, 
@@ -7,8 +8,18 @@ import CONFIG, {
   ConfigType
 } from './config';
 import { ISendNotificationInputOptions, INotificationPayload } from './types';
-import { STORAGE_TYPE, STORAGE_TYPE_TO_VERIFICATION_TYPE_MAP, NOTIFICATION_TYPE } from './constants';
-  
+import {
+  STORAGE_TYPE,
+  STORAGE_TYPE_TO_VERIFICATION_TYPE_MAP,
+  NOTIFICATION_TYPE,
+  CHAIN_ID_TO_SOURCE,
+  SOURCE_TYPES
+} from './constants';
+
+export function getUUID() {
+  return uuidv4();
+}
+
 export const getEpnsConfig = (chainId: number, isDev?: boolean) : ConfigType => {
   // for Mainnet
   if ([ETH_MAINNET, POLYGON_MAINNET].includes(chainId)) {
@@ -113,12 +124,12 @@ export async function getEIP712Signature(
 /**
  * This function gets the hashed identity bytes from the notification type & payload.
  */
-export function getPayloadIdentity(storage: number, payload: INotificationPayload) {
+export function getPayloadIdentity_old(storage: number, payload: INotificationPayload) {
   // step 1: hash the whole payload
   const payloadHash = CryptoJS.SHA256(JSON.stringify(payload)).toString(CryptoJS.enc.Hex);
 
   // step 2: create the string in the format of `2+${<PAYLOAD_HASH>}`
-  const identityString = `${storage}+${payloadHash}`;
+  const identityString = `${storage}+${JSON.stringify(payload)}`;
   
   return identityString;
 }
@@ -150,8 +161,9 @@ export async function getRecipients(
       return recipients;
     } else if (notificationType === NOTIFICATION_TYPE.TARGETTED) {
       if (typeof recipients === 'string') {
-        const recipientObject = { [recipients]: null };
-        return JSON.stringify(recipientObject);
+        return {
+          [recipients]: null
+        };
       }
     } else if (notificationType === NOTIFICATION_TYPE.SUBSET) {
       if (Array.isArray(recipients)) {
@@ -160,10 +172,101 @@ export async function getRecipients(
           [_rAddress]: null
         }), {});
 
-        return JSON.stringify(recipientObject);
+        return recipientObject;
       }
     }
   }
-  return JSON.stringify(recipients);
+  return recipients;
 }
 
+
+export async function getVerificationProof(vProofArgs: {
+  signer: any,
+  chainId: number,
+  storage: number,
+  verifyingContract: string,
+  payload: any,
+  ipfsHash?: string, // need to pass this
+  txHash?: string, // need to pass this
+  subgraphId?: string, // need to pass this
+  subgraphNotificationCounter?: number // need to pass this
+}) {
+
+  const {
+    signer,
+    chainId,
+    storage,
+    verifyingContract,
+    payload,
+    ipfsHash, // where do we get this, directly from the consumer??
+    txHash, // where do we get this, directly from the consumer??
+    subgraphId, // where do we get this, directly from the consumer??
+    subgraphNotificationCounter // where do we get this, directly from the consumer??
+  } = vProofArgs || {};
+
+  
+  const type = {
+    Data: [{ name: 'data', type: 'string' }]
+  };
+  const domain = {
+    name: 'EPNS COMM V1',
+    chainId: chainId,
+    verifyingContract: verifyingContract,
+  };
+  let message = null;
+  const uuid = getUUID();
+
+  if (storage === STORAGE_TYPE.SMART_CONTRACT) {
+    return `eip155:${chainId}:${txHash}::uid::${uuid}`;
+  } else if (storage === STORAGE_TYPE.IPFS) {
+    message = {
+      data: `1+${ipfsHash}`,
+    };
+    const signature = signer._signTypedData(domain, type, message);
+    return `eip712v2:${signature}::uid::${uuid}`;
+  } else if (storage === STORAGE_TYPE.DIRECT_PAYLOAD) {
+    message = {
+      data: `2+${JSON.stringify(payload)}`,
+    };
+    const signature = signer._signTypedData(domain, type, message);
+    return `eip712v2:${signature}::uid::${uuid}`;
+  } else if (storage === STORAGE_TYPE.SUBGRAPH) {
+    return `graph:${subgraphId}+${subgraphNotificationCounter}::uid::${uuid}`;
+  }
+}
+
+export function getPayloadIdentity(identityArgs: {
+  storage: number,
+  payload: INotificationPayload,
+  notificationType?: number,
+  ipfsHash?: string,
+  subgraphId?: string,
+  subgraphNotificationCounter?: number
+}) {
+
+  const {
+    storage,
+    payload,
+    notificationType,
+    ipfsHash,
+    subgraphId, // where do we get this, directly from the consumer??
+    subgraphNotificationCounter // where do we get this, directly from the consumer??
+  } = identityArgs || {};
+
+  if (storage === STORAGE_TYPE.SMART_CONTRACT) {
+    return `0+${notificationType}+${payload.notification.title}+${payload.notification.body}`;
+  } else if (storage === STORAGE_TYPE.IPFS) {
+    return `1+${ipfsHash}`
+  } else if (storage === STORAGE_TYPE.DIRECT_PAYLOAD) {
+    return `2+${JSON.stringify(payload)}`;
+  } else if (storage === STORAGE_TYPE.SUBGRAPH) {
+    return `3+graph:${subgraphId}+${subgraphNotificationCounter}`;
+  }
+}
+
+export function getSource(chainId: number, storage: number) {
+  if (storage === STORAGE_TYPE.SUBGRAPH) {
+    SOURCE_TYPES.THE_GRAPH;
+  }
+  return CHAIN_ID_TO_SOURCE[chainId];
+}

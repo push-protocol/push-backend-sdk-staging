@@ -9,6 +9,14 @@ export const CHAIN_ID_TO_SOURCE: ChainIdToSourceType = {
     80001: "POLYGON_TEST_MUMBAI",
 };
 
+export const SOURCE_TYPES = {
+  ETH_MAINNET: 'ETH_MAINNET',
+  ETH_TEST_KOVAN: 'ETH_TEST_KOVAN',
+  POLYGON_MAINNET: 'POLYGON_MAINNET',
+  POLYGON_TEST_MUMBAI: 'POLYGON_TEST_MUMBAI',
+  THE_GRAPH: 'THE_GRAPH'
+};
+
 
 export interface StorageToVerificationType {
   [key: number]: string | {

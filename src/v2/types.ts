@@ -18,6 +18,10 @@ export interface ISendNotificationInputOptions {
   channel: string;
   expiry?: number;
   hidden?: boolean;
+  graph?: {
+    id: string,
+    counter: number
+  };
   dev?: boolean;
 }
 

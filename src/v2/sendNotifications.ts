@@ -6,7 +6,9 @@ import {
   getEIP712Signature,
   getPayloadIdentity,
   getRecipients,
-  getVerificationType
+  getVerificationType,
+  getVerificationProof,
+  getSource
 } from './helpers';
 import { CHAIN_ID_TO_SOURCE } from './constants';
 
@@ -21,6 +23,7 @@ export async function sendNotification(options: ISendNotificationInputOptions) {
       payload,
       recipients,
       channel,
+      graph,
       dev
     } = options || {};
 
@@ -31,20 +34,39 @@ export async function sendNotification(options: ISendNotificationInputOptions) {
     const epnsConfig = getEpnsConfig(chainId, dev);
     const _recipients = await getRecipients(type, recipients, payload?.sectype, _channel);
     const notificationPayload = getPayloadForAPIInput(options, _recipients);
-    const verificationType = getVerificationType(storage, chainId);
-    const eip712Signature = await getEIP712Signature(
+
+    const verificationProof = await getVerificationProof({
       signer,
       chainId,
-      epnsConfig.EPNS_COMMUNICATOR_CONTRACT,
-      notificationPayload
-    );
-    const identity = getPayloadIdentity(storage, notificationPayload);
+      storage,
+      verifyingContract: epnsConfig.EPNS_COMMUNICATOR_CONTRACT,
+      payload: notificationPayload,
+      subgraphId: graph?.id,
+      subgraphNotificationCounter: graph?.counter
+    });
+
+    // const verificationType = getVerificationType(storage, chainId);
+    // const eip712Signature = await getEIP712Signature(
+    //   signer,
+    //   chainId,
+    //   epnsConfig.EPNS_COMMUNICATOR_CONTRACT,
+    //   notificationPayload
+    // );
+    const identity = getPayloadIdentity({
+      storage,
+      payload: notificationPayload,
+      notificationType: type,
+      subgraphId: graph?.id,
+      subgraphNotificationCounter: graph?.counter
+    });
+
+    const source = getSource(chainId, storage);
    
     const apiPayload = {
-      verificationProof: `${verificationType}:${eip712Signature}`,
+      verificationProof,
       identity,
       channel: _channel,
-      source: CHAIN_ID_TO_SOURCE[chainId],
+      source,
       payload: notificationPayload
     };
 
