@@ -63,77 +63,6 @@ export function getPayloadForAPIInput(
   };
 }
 
-export function getVerificationType(storage: number, chainId: number) {
-  if (storage === STORAGE_TYPE.SMART_CONTRACT) {
-    const verifcationMap = STORAGE_TYPE_TO_VERIFICATION_TYPE_MAP[storage];
-    return verifcationMap[chainId];
-  }
-
-  return STORAGE_TYPE_TO_VERIFICATION_TYPE_MAP[storage];
-}
-
-export async function getEIP712Signature(
-    signer: any,
-    chainId: number,
-    verifyingContract: string,
-    payload: any,
-) {
-    const DOMAIN = {
-        name: 'EPNS COMM V1',
-        chainId: chainId,
-        verifyingContract,
-    };
-
-    /**
-     * We WILL have CHANGE here because of RECIPIENT changes from BE
-     */
-
-    const TYPE = {
-      Payload: [
-        { name: 'notification', type: 'Notification' },
-        { name: 'data', type: 'Data' },
-        // TODO - add Recipients once BE confirms
-      ],
-      Notification: [
-        { name: 'title', type: 'string' },
-        { name: 'body', type: 'string' },
-      ],
-      Data: [
-        { name: 'acta', type: 'string' },
-        { name: 'aimg', type: 'string' },
-        { name: 'amsg', type: 'string' },
-        { name: 'asub', type: 'string' },
-        { name: 'type', type: 'string' }
-      ]
-      // TODO - add Recipients once BE confirms
-    };
-
-    if (payload?.data?.etime) {
-      TYPE.Data.push({ name: 'etime', type: 'number' })
-    }
-
-    if (payload?.data?.hidden) {
-      TYPE.Data.push({ name: 'hidden', type: 'boolean' })
-    }
-
-    const signature = await signer._signTypedData(DOMAIN, TYPE, payload);
-
-    return signature;
-};
-
-/**
- * This function gets the hashed identity bytes from the notification type & payload.
- */
-export function getPayloadIdentity_old(storage: number, payload: INotificationPayload) {
-  // step 1: hash the whole payload
-  const payloadHash = CryptoJS.SHA256(JSON.stringify(payload)).toString(CryptoJS.enc.Hex);
-
-  // step 2: create the string in the format of `2+${<PAYLOAD_HASH>}`
-  const identityString = `${storage}+${JSON.stringify(payload)}`;
-  
-  return identityString;
-}
-
 /**
  * This function returns the recipient format accepted by the API for different notification types
  */
@@ -165,9 +94,10 @@ export async function getRecipients(
     } else if (notificationType === NOTIFICATION_TYPE.TARGETTED) {
       if (typeof recipients === 'string') {
         addressInCAIP = getCAIPFormat(chainId, recipients);
-        return {
-          [addressInCAIP]: null
-        };
+        return addressInCAIP;
+        // return {
+        //   [addressInCAIP]: null
+        // };
       }
     } else if (notificationType === NOTIFICATION_TYPE.SUBSET) {
       if (Array.isArray(recipients)) {
@@ -217,24 +147,25 @@ export async function getVerificationProof({
     verifyingContract: verifyingContract,
   };
   let message = null;
-  const uuid = getUUID();
+  // const uuid = getUUID();
 
   if (storage === STORAGE_TYPE.SMART_CONTRACT) {
-    return `eip155:${chainId}:${txHash}::uid::${uuid}`;
+    return `eip155:${chainId}:${txHash}`;
   } else if (storage === STORAGE_TYPE.IPFS) {
     message = {
       data: `1+${ipfsHash}`,
     };
-    const signature = signer._signTypedData(domain, type, message);
-    return `eip712v2:${signature}::uid::${uuid}`;
+    const signature = await signer._signTypedData(domain, type, message);
+    return `eip712v2:${signature}`;
   } else if (storage === STORAGE_TYPE.DIRECT_PAYLOAD) {
+    const payloadJSON = JSON.stringify(payload);
     message = {
-      data: `2+${JSON.stringify(payload)}`,
+      data: `2+${payloadJSON}`,
     };
-    const signature = signer._signTypedData(domain, type, message);
-    return `eip712v2:${signature}::uid::${uuid}`;
+    const signature = await signer._signTypedData(domain, type, message);
+    return `eip712v2:${signature}`;
   } else if (storage === STORAGE_TYPE.SUBGRAPH) {
-    return `graph:${subgraphId}+${subgraphNotificationCounter}::uid::${uuid}`;
+    return `graph:${subgraphId}+${subgraphNotificationCounter}`;
   }
 }
 
@@ -253,15 +184,17 @@ export function getPayloadIdentity({
   subgraphId?: string,
   subgraphNotificationCounter?: number
 }) {
+  const uuid = getUUID();
 
   if (storage === STORAGE_TYPE.SMART_CONTRACT) {
-    return `0+${notificationType}+${payload.notification.title}+${payload.notification.body}`;
+    return `0+${notificationType}+${payload.notification.title}+${payload.notification.body}::uid::${uuid}`;
   } else if (storage === STORAGE_TYPE.IPFS) {
-    return `1+${ipfsHash}`
+    return `1+${ipfsHash}::uid::${uuid}`
   } else if (storage === STORAGE_TYPE.DIRECT_PAYLOAD) {
-    return `2+${JSON.stringify(payload)}`;
+    const payloadJSON = JSON.stringify(payload);
+    return `2+${payloadJSON}::uid::${uuid}`;
   } else if (storage === STORAGE_TYPE.SUBGRAPH) {
-    return `3+graph:${subgraphId}+${subgraphNotificationCounter}`;
+    return `3+graph:${subgraphId}+${subgraphNotificationCounter}::uid::${uuid}`;
   }
 }
 

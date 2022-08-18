@@ -3,15 +3,12 @@ import { ISendNotificationInputOptions } from './types';
 import {
   getEpnsConfig,
   getPayloadForAPIInput,
-  getEIP712Signature,
   getPayloadIdentity,
   getRecipients,
-  getVerificationType,
   getVerificationProof,
   getSource,
   getCAIPFormat
 } from './helpers';
-import { CHAIN_ID_TO_SOURCE } from './constants';
 
 
 export async function sendNotification(options: ISendNotificationInputOptions) {
@@ -30,8 +27,6 @@ export async function sendNotification(options: ISendNotificationInputOptions) {
 
     const _channel = channel || signer.address;
 
-    console.log('_channel: ==> ', _channel);
-
     const epnsConfig = getEpnsConfig(chainId, dev);
     const _recipients = await getRecipients(chainId, type, recipients, payload?.sectype, _channel);
     const notificationPayload = getPayloadForAPIInput(options, _recipients);
@@ -46,13 +41,6 @@ export async function sendNotification(options: ISendNotificationInputOptions) {
       subgraphNotificationCounter: graph?.counter
     });
 
-    // const verificationType = getVerificationType(storage, chainId);
-    // const eip712Signature = await getEIP712Signature(
-    //   signer,
-    //   chainId,
-    //   epnsConfig.EPNS_COMMUNICATOR_CONTRACT,
-    //   notificationPayload
-    // );
     const identity = getPayloadIdentity({
       storage,
       payload: notificationPayload,
@@ -68,10 +56,16 @@ export async function sendNotification(options: ISendNotificationInputOptions) {
       identity,
       channel: getCAIPFormat(chainId, _channel),
       source,
-      // payload: notificationPayload
+      // recipient: _recipients
     };
 
-    console.log('\n\nAPI call :-->> ', epnsConfig.API_BASE_URL, '\n\n', apiPayload, '\n\n\n\n');
+    console.log(
+      '\n\nAPI call :-->> ',
+      epnsConfig.API_BASE_URL,
+      '\n\n',
+      apiPayload,
+      '\n\n\n\n'
+    );
 
     return await axios.post(
       epnsConfig.API_BASE_URL + '/payloads/add',
