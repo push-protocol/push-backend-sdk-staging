@@ -8,7 +8,8 @@ import {
   getRecipients,
   getVerificationType,
   getVerificationProof,
-  getSource
+  getSource,
+  getCAIPFormat
 } from './helpers';
 import { CHAIN_ID_TO_SOURCE } from './constants';
 
@@ -32,7 +33,7 @@ export async function sendNotification(options: ISendNotificationInputOptions) {
     console.log('_channel: ==> ', _channel);
 
     const epnsConfig = getEpnsConfig(chainId, dev);
-    const _recipients = await getRecipients(type, recipients, payload?.sectype, _channel);
+    const _recipients = await getRecipients(chainId, type, recipients, payload?.sectype, _channel);
     const notificationPayload = getPayloadForAPIInput(options, _recipients);
 
     const verificationProof = await getVerificationProof({
@@ -65,9 +66,9 @@ export async function sendNotification(options: ISendNotificationInputOptions) {
     const apiPayload = {
       verificationProof,
       identity,
-      channel: _channel,
+      channel: getCAIPFormat(chainId, _channel),
       source,
-      payload: notificationPayload
+      // payload: notificationPayload
     };
 
     console.log('\n\nAPI call :-->> ', epnsConfig.API_BASE_URL, '\n\n', apiPayload, '\n\n\n\n');

@@ -138,11 +138,14 @@ export function getPayloadIdentity_old(storage: number, payload: INotificationPa
  * This function returns the recipient format accepted by the API for different notification types
  */
 export async function getRecipients(
+  chainId: number,
   notificationType: number,
   recipients?: string | [string],
   secretType?: string,
   channel?: string
 ) {
+  let addressInCAIP = '';
+
   if (secretType) {
     return '';
     /**
@@ -156,21 +159,25 @@ export async function getRecipients(
    */
     if (notificationType === NOTIFICATION_TYPE.BROADCAST) {
       if (!recipients) {
-        return channel;
+        return getCAIPFormat(chainId, channel || '');
       }
       return recipients;
     } else if (notificationType === NOTIFICATION_TYPE.TARGETTED) {
       if (typeof recipients === 'string') {
+        addressInCAIP = getCAIPFormat(chainId, recipients);
         return {
-          [recipients]: null
+          [addressInCAIP]: null
         };
       }
     } else if (notificationType === NOTIFICATION_TYPE.SUBSET) {
       if (Array.isArray(recipients)) {
-        const recipientObject =  recipients.reduce((_recipients, _rAddress) => ({
+        const recipientObject =  recipients.reduce((_recipients, _rAddress) => {
+          addressInCAIP = getCAIPFormat(chainId, _rAddress);
+         return {
           ..._recipients,
-          [_rAddress]: null
-        }), {});
+          [addressInCAIP]: null
+         };
+        }, {});
 
         return recipientObject;
       }
@@ -179,8 +186,17 @@ export async function getRecipients(
   return recipients;
 }
 
-
-export async function getVerificationProof(vProofArgs: {
+export async function getVerificationProof({
+  signer,
+  chainId,
+  storage,
+  verifyingContract,
+  payload,
+  ipfsHash, // where do we get this, directly from the consumer??
+  txHash, // where do we get this, directly from the consumer??
+  subgraphId, // where do we get this, directly from the consumer??
+  subgraphNotificationCounter // where do we get this, directly from the consumer??
+}: {
   signer: any,
   chainId: number,
   storage: number,
@@ -191,19 +207,6 @@ export async function getVerificationProof(vProofArgs: {
   subgraphId?: string, // need to pass this
   subgraphNotificationCounter?: number // need to pass this
 }) {
-
-  const {
-    signer,
-    chainId,
-    storage,
-    verifyingContract,
-    payload,
-    ipfsHash, // where do we get this, directly from the consumer??
-    txHash, // where do we get this, directly from the consumer??
-    subgraphId, // where do we get this, directly from the consumer??
-    subgraphNotificationCounter // where do we get this, directly from the consumer??
-  } = vProofArgs || {};
-
   
   const type = {
     Data: [{ name: 'data', type: 'string' }]
@@ -235,7 +238,14 @@ export async function getVerificationProof(vProofArgs: {
   }
 }
 
-export function getPayloadIdentity(identityArgs: {
+export function getPayloadIdentity({
+  storage,
+  payload,
+  notificationType,
+  ipfsHash,
+  subgraphId, // where do we get this, directly from the consumer??
+  subgraphNotificationCounter // where do we get this, directly from the consumer??
+} : {
   storage: number,
   payload: INotificationPayload,
   notificationType?: number,
@@ -243,15 +253,6 @@ export function getPayloadIdentity(identityArgs: {
   subgraphId?: string,
   subgraphNotificationCounter?: number
 }) {
-
-  const {
-    storage,
-    payload,
-    notificationType,
-    ipfsHash,
-    subgraphId, // where do we get this, directly from the consumer??
-    subgraphNotificationCounter // where do we get this, directly from the consumer??
-  } = identityArgs || {};
 
   if (storage === STORAGE_TYPE.SMART_CONTRACT) {
     return `0+${notificationType}+${payload.notification.title}+${payload.notification.body}`;
@@ -269,4 +270,14 @@ export function getSource(chainId: number, storage: number) {
     SOURCE_TYPES.THE_GRAPH;
   }
   return CHAIN_ID_TO_SOURCE[chainId];
+}
+
+export function getCAIPFormat(chainId: number, address: string) {
+  // EVM based chains
+  if ([1, 42, 37, 80001].includes(chainId)) {
+    return `eip155:${chainId}:${address}`;
+  }
+
+  return address;
+  // TODO: add support for other chains
 }
