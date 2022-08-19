@@ -21,8 +21,11 @@ export async function sendNotification(options: ISendNotificationInputOptions) {
       payload,
       recipients,
       channel,
+      dev,
+      // newly added PROPS: TODO: check about these
       graph,
-      dev
+      ipfsHash,
+      txHash,      
     } = options || {};
 
     const _channel = channel || signer.address;
@@ -37,16 +40,16 @@ export async function sendNotification(options: ISendNotificationInputOptions) {
       storage,
       verifyingContract: epnsConfig.EPNS_COMMUNICATOR_CONTRACT,
       payload: notificationPayload,
-      subgraphId: graph?.id,
-      subgraphNotificationCounter: graph?.counter
+      graph,
+      ipfsHash,
+      txHash
     });
 
     const identity = getPayloadIdentity({
       storage,
       payload: notificationPayload,
       notificationType: type,
-      subgraphId: graph?.id,
-      subgraphNotificationCounter: graph?.counter
+      graph
     });
 
     const source = getSource(chainId, storage);
@@ -56,19 +59,21 @@ export async function sendNotification(options: ISendNotificationInputOptions) {
       identity,
       channel: getCAIPFormat(chainId, _channel),
       source,
-      // recipient: _recipients
+      recipient: _recipients
     };
+
+    const requestURL = `${epnsConfig.API_BASE_URL}/v1/payloads/`;
 
     console.log(
       '\n\nAPI call :-->> ',
-      epnsConfig.API_BASE_URL,
+      requestURL,
       '\n\n',
       apiPayload,
       '\n\n\n\n'
     );
 
     return await axios.post(
-      epnsConfig.API_BASE_URL + '/payloads/add',
+      requestURL,
       apiPayload,
       {
         headers: {

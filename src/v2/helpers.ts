@@ -10,7 +10,6 @@ import CONFIG, {
 import { ISendNotificationInputOptions, INotificationPayload } from './types';
 import {
   STORAGE_TYPE,
-  STORAGE_TYPE_TO_VERIFICATION_TYPE_MAP,
   NOTIFICATION_TYPE,
   CHAIN_ID_TO_SOURCE,
   SOURCE_TYPES
@@ -122,20 +121,18 @@ export async function getVerificationProof({
   storage,
   verifyingContract,
   payload,
-  ipfsHash, // where do we get this, directly from the consumer??
-  txHash, // where do we get this, directly from the consumer??
-  subgraphId, // where do we get this, directly from the consumer??
-  subgraphNotificationCounter // where do we get this, directly from the consumer??
+  ipfsHash,
+  txHash,
+  graph = {},
 }: {
   signer: any,
   chainId: number,
   storage: number,
   verifyingContract: string,
   payload: any,
-  ipfsHash?: string, // need to pass this
-  txHash?: string, // need to pass this
-  subgraphId?: string, // need to pass this
-  subgraphNotificationCounter?: number // need to pass this
+  ipfsHash?: string,
+  txHash?: string,
+  graph?: any
 }) {
   
   const type = {
@@ -147,7 +144,6 @@ export async function getVerificationProof({
     verifyingContract: verifyingContract,
   };
   let message = null;
-  // const uuid = getUUID();
 
   if (storage === STORAGE_TYPE.SMART_CONTRACT) {
     return `eip155:${chainId}:${txHash}`;
@@ -165,7 +161,7 @@ export async function getVerificationProof({
     const signature = await signer._signTypedData(domain, type, message);
     return `eip712v2:${signature}`;
   } else if (storage === STORAGE_TYPE.SUBGRAPH) {
-    return `graph:${subgraphId}+${subgraphNotificationCounter}`;
+    return `graph:${graph?.id}+${graph?.counter}`;
   }
 }
 
@@ -174,33 +170,31 @@ export function getPayloadIdentity({
   payload,
   notificationType,
   ipfsHash,
-  subgraphId, // where do we get this, directly from the consumer??
-  subgraphNotificationCounter // where do we get this, directly from the consumer??
+  graph = {}
 } : {
   storage: number,
   payload: INotificationPayload,
   notificationType?: number,
   ipfsHash?: string,
-  subgraphId?: string,
-  subgraphNotificationCounter?: number
+  graph?: any
 }) {
   const uuid = getUUID();
 
   if (storage === STORAGE_TYPE.SMART_CONTRACT) {
     return `0+${notificationType}+${payload.notification.title}+${payload.notification.body}::uid::${uuid}`;
   } else if (storage === STORAGE_TYPE.IPFS) {
-    return `1+${ipfsHash}::uid::${uuid}`
+    return `1+${ipfsHash}::uid::${uuid}`;
   } else if (storage === STORAGE_TYPE.DIRECT_PAYLOAD) {
     const payloadJSON = JSON.stringify(payload);
     return `2+${payloadJSON}::uid::${uuid}`;
   } else if (storage === STORAGE_TYPE.SUBGRAPH) {
-    return `3+graph:${subgraphId}+${subgraphNotificationCounter}::uid::${uuid}`;
+    return `3+graph:${graph?.id}+${graph?.counter}::uid::${uuid}`;
   }
 }
 
 export function getSource(chainId: number, storage: number) {
   if (storage === STORAGE_TYPE.SUBGRAPH) {
-    SOURCE_TYPES.THE_GRAPH;
+    return SOURCE_TYPES.THE_GRAPH;
   }
   return CHAIN_ID_TO_SOURCE[chainId];
 }
@@ -212,5 +206,5 @@ export function getCAIPFormat(chainId: number, address: string) {
   }
 
   return address;
-  // TODO: add support for other chains
+  // TODO: add support for other non-EVM based chains
 }

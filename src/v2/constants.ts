@@ -17,13 +17,6 @@ export const SOURCE_TYPES = {
   THE_GRAPH: 'THE_GRAPH'
 };
 
-
-export interface StorageToVerificationType {
-  [key: number]: string | {
-    [key: number]: string
-  },
-}
-
 export const STORAGE_TYPE = {
   SMART_CONTRACT: 0,
   IPFS: 1,
@@ -35,17 +28,4 @@ export const NOTIFICATION_TYPE = {
   BROADCAST: 1,
   TARGETTED: 3,
   SUBSET: 4
-};
-
-export const STORAGE_TYPE_TO_VERIFICATION_TYPE_MAP: StorageToVerificationType = {
-  [STORAGE_TYPE.SMART_CONTRACT]: {
-    // chainId to verificationType
-    1: 'eth',
-    42: 'eth',
-    37: 'poly',
-    80001: 'poly'
-  },
-  [STORAGE_TYPE.IPFS]: 'eip712',
-  [STORAGE_TYPE.DIRECT_PAYLOAD]: 'eip712',
-  [STORAGE_TYPE.SUBGRAPH]: 'thegraph'
 };

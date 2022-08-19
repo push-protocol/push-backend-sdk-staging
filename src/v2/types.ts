@@ -22,6 +22,8 @@ export interface ISendNotificationInputOptions {
     id: string,
     counter: number
   };
+  ipfsHash?: string;
+  txHash?: string;
   dev?: boolean;
 }
 
