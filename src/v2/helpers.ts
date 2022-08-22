@@ -1,4 +1,3 @@
-import CryptoJS from 'crypto-js';
 import { v4 as uuidv4 } from 'uuid';
 import CONFIG, { 
   ETH_MAINNET, 
@@ -9,7 +8,7 @@ import CONFIG, {
 } from './config';
 import { ISendNotificationInputOptions, INotificationPayload } from './types';
 import {
-  STORAGE_TYPE,
+  IDENTITY_TYPE,
   NOTIFICATION_TYPE,
   CHAIN_ID_TO_SOURCE,
   SOURCE_TYPES
@@ -58,7 +57,7 @@ export function getPayloadForAPIInput(
       ...(inputOptions?.hidden && { hidden: inputOptions?.hidden }),
       ...(inputOptions?.payload?.sectype && { sectype: inputOptions?.payload?.sectype })
     },
-    recipients: recipients
+    // recipients: recipients
   };
 }
 
@@ -75,12 +74,39 @@ export async function getRecipients(
   let addressInCAIP = '';
 
   if (secretType) {
-    return '';
+    let secret = '';
+    // return '';
     /**
      * Currently SECRET FLOW is yet to be finalized on the backend, so will revisit this later.
      * But in secret flow we basically generate secret for the address
      * and send it in { 0xtarget: secret_generated_for_0xtarget } format for all
      */
+     if (notificationType === NOTIFICATION_TYPE.TARGETTED) {
+      if (typeof recipients === 'string') {
+        addressInCAIP = getCAIPFormat(chainId, recipients);
+        secret = ''; // do secret stuff // TODO
+
+        return {
+          [addressInCAIP]: secret
+        };
+      }
+    } else if (notificationType === NOTIFICATION_TYPE.SUBSET) {
+      if (Array.isArray(recipients)) {
+        const recipientObject =  recipients.reduce((_recipients, _rAddress) => {
+          addressInCAIP = getCAIPFormat(chainId, _rAddress);
+          secret = ''; // do secret stuff // TODO
+
+          return {
+            ..._recipients,
+            [addressInCAIP]: secret
+          };
+        }, {});
+
+        return recipientObject;
+      }
+    }
+
+
   } else {
   /**
    * NON-SECRET FLOW
@@ -94,9 +120,6 @@ export async function getRecipients(
       if (typeof recipients === 'string') {
         addressInCAIP = getCAIPFormat(chainId, recipients);
         return addressInCAIP;
-        // return {
-        //   [addressInCAIP]: null
-        // };
       }
     } else if (notificationType === NOTIFICATION_TYPE.SUBSET) {
       if (Array.isArray(recipients)) {
@@ -118,22 +141,24 @@ export async function getRecipients(
 export async function getVerificationProof({
   signer,
   chainId,
-  storage,
+  notificationType,
+  identityType,
   verifyingContract,
   payload,
   ipfsHash,
-  txHash,
   graph = {},
 }: {
   signer: any,
   chainId: number,
-  storage: number,
+  notificationType: number,
+  identityType: number,
   verifyingContract: string,
   payload: any,
   ipfsHash?: string,
-  txHash?: string,
-  graph?: any
+  graph?: any,
 }) {
+
+  console.log('payload ---> \n\n', payload);
   
   const type = {
     Data: [{ name: 'data', type: 'string' }]
@@ -144,56 +169,62 @@ export async function getVerificationProof({
     verifyingContract: verifyingContract,
   };
   let message = null;
+  let signature = null;
 
-  if (storage === STORAGE_TYPE.SMART_CONTRACT) {
-    return `eip155:${chainId}:${txHash}`;
-  } else if (storage === STORAGE_TYPE.IPFS) {
+  if (identityType === IDENTITY_TYPE.MINIMAL) {
+    message = {
+      data: `${identityType}+${notificationType}+${payload.notification.title}+${payload.notification.body}`,
+    };
+    signature = await signer._signTypedData(domain, type, message);
+    return `eip712v2:${signature}`;
+
+  } else if (identityType === IDENTITY_TYPE.IPFS) {
     message = {
       data: `1+${ipfsHash}`,
     };
-    const signature = await signer._signTypedData(domain, type, message);
+    signature = await signer._signTypedData(domain, type, message);
     return `eip712v2:${signature}`;
-  } else if (storage === STORAGE_TYPE.DIRECT_PAYLOAD) {
+  } else if (identityType === IDENTITY_TYPE.DIRECT_PAYLOAD) {
     const payloadJSON = JSON.stringify(payload);
     message = {
       data: `2+${payloadJSON}`,
     };
-    const signature = await signer._signTypedData(domain, type, message);
+    signature = await signer._signTypedData(domain, type, message);
     return `eip712v2:${signature}`;
-  } else if (storage === STORAGE_TYPE.SUBGRAPH) {
+  } else if (identityType === IDENTITY_TYPE.SUBGRAPH) {
     return `graph:${graph?.id}+${graph?.counter}`;
   }
 }
 
 export function getPayloadIdentity({
-  storage,
+  identityType,
   payload,
   notificationType,
   ipfsHash,
-  graph = {}
+  graph = {},
+  uuid
 } : {
-  storage: number,
+  identityType: number,
   payload: INotificationPayload,
   notificationType?: number,
   ipfsHash?: string,
-  graph?: any
+  graph?: any,
+  uuid: string
 }) {
-  const uuid = getUUID();
-
-  if (storage === STORAGE_TYPE.SMART_CONTRACT) {
+  if (identityType === IDENTITY_TYPE.MINIMAL) {
     return `0+${notificationType}+${payload.notification.title}+${payload.notification.body}::uid::${uuid}`;
-  } else if (storage === STORAGE_TYPE.IPFS) {
+  } else if (identityType === IDENTITY_TYPE.IPFS) {
     return `1+${ipfsHash}::uid::${uuid}`;
-  } else if (storage === STORAGE_TYPE.DIRECT_PAYLOAD) {
+  } else if (identityType === IDENTITY_TYPE.DIRECT_PAYLOAD) {
     const payloadJSON = JSON.stringify(payload);
     return `2+${payloadJSON}::uid::${uuid}`;
-  } else if (storage === STORAGE_TYPE.SUBGRAPH) {
+  } else if (identityType === IDENTITY_TYPE.SUBGRAPH) {
     return `3+graph:${graph?.id}+${graph?.counter}::uid::${uuid}`;
   }
 }
 
-export function getSource(chainId: number, storage: number) {
-  if (storage === STORAGE_TYPE.SUBGRAPH) {
+export function getSource(chainId: number, identityType: number) {
+  if (identityType === IDENTITY_TYPE.SUBGRAPH) {
     return SOURCE_TYPES.THE_GRAPH;
   }
   return CHAIN_ID_TO_SOURCE[chainId];

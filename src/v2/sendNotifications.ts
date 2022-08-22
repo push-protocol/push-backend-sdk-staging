@@ -7,7 +7,8 @@ import {
   getRecipients,
   getVerificationProof,
   getSource,
-  getCAIPFormat
+  getCAIPFormat,
+  getUUID
 } from './helpers';
 
 
@@ -17,17 +18,17 @@ export async function sendNotification(options: ISendNotificationInputOptions) {
       signer,
       chainId,
       type,
-      storage,
+      identityType,
       payload,
       recipients,
       channel,
       dev,
       // newly added PROPS: TODO: check about these
       graph,
-      ipfsHash,
-      txHash,      
+      ipfsHash,   
     } = options || {};
 
+    const uuid = getUUID();
     const _channel = channel || signer.address;
 
     const epnsConfig = getEpnsConfig(chainId, dev);
@@ -37,22 +38,24 @@ export async function sendNotification(options: ISendNotificationInputOptions) {
     const verificationProof = await getVerificationProof({
       signer,
       chainId,
-      storage,
+      identityType,
+      notificationType: type,
       verifyingContract: epnsConfig.EPNS_COMMUNICATOR_CONTRACT,
       payload: notificationPayload,
       graph,
       ipfsHash,
-      txHash
     });
 
     const identity = getPayloadIdentity({
-      storage,
+      identityType,
       payload: notificationPayload,
       notificationType: type,
-      graph
+      graph,
+      ipfsHash,
+      uuid
     });
 
-    const source = getSource(chainId, storage);
+    const source = getSource(chainId, identityType);
    
     const apiPayload = {
       verificationProof,

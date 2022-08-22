@@ -8,12 +8,15 @@ npm i @epnsproject/backend-sdk-staging
 
 ```typescript
 const ethers = require('ethers');
-const { sendNotification } = require('@epnsproject/backend-sdk-staging');
+// local lib
+const { sendNotification } = require('./lib'); 
+// or direct npm package like
+// const { sendNotification } = require('@epnsproject/backend-sdk-staging');
 
-
-const Pkey = `0xabc12345`; // channel PK
+const PK = 'd5797b255933f72a6a084fcfc0f5f4881defee8c1ae387197805647d0b10a8a0'; // PKey
+const Pkey = `0x${PK}`;
 const signer = new ethers.Wallet(Pkey);
-const channelAddress = '0x52f856A160733A860ae7DC98DC71061bE33A28b3';
+const testChannelAddress = '0xD8634C39BBFd4033c0d3289C4515275102423681';
 
 const NOTIFICATION_TYPE = {
     BROADCAST: 1,
@@ -21,208 +24,122 @@ const NOTIFICATION_TYPE = {
     SUBSET: 4
 };
 
-const OPTIONS = {
-    TARGETTED: {
-      signer,
-      chainId: 42,
-      type: NOTIFICATION_TYPE.TARGETTED,
-      storage: 2,
-      notification: {
-          title: 'sample header',
-          body: 'testing out the new send notifications'
-      },
-      payload: {
-          title: 'test notification title',
-          body: 'test notif body',
-          cta: '',
-          img: ''
-      },
-      recipients: '0xCdBE6D076e05c5875D90fa35cc85694E1EAFBBd1',
-      channel: channelAddress,
-      dev: true
+const IDENTITY_TYPE = {
+    MINIMAL: 0,
+    IPFS: 1,
+    DIRECT_PAYLOAD: 2,
+    SUBGRAPH: 3
+  };
+
+const timestamp = Date.now();
+
+const OPTIONS_MATRIX = {
+  TARGETTED: {
+    DIRECT_PAYLOAD:  {
+        signer,
+        chainId: 42,
+        type: NOTIFICATION_TYPE.TARGETTED,
+        identityType: IDENTITY_TYPE.DIRECT_PAYLOAD,
+        notification: {
+            title: `[SDK-TEST] notification TITLE: ${timestamp}`,
+            body: `[sdk-test] notification BODY ${timestamp}`
+        },
+        payload: {
+            title: `[sdk-test] payload title ${timestamp}`,
+            body: `type:${NOTIFICATION_TYPE.TARGETTED} identity:${IDENTITY_TYPE.DIRECT_PAYLOAD}`,
+            cta: '',
+            img: ''
+        },
+        recipients: '0xCdBE6D076e05c5875D90fa35cc85694E1EAFBBd1',
+        channel: testChannelAddress,
+        dev: true
     },
-    SUBSET: {
-      signer,
-      chainId: 42,
-      type: NOTIFICATION_TYPE.SUBSET,
-      storage: 2,
-      notification: {
-          title: 'sample header',
-          body: 'testing out the new send notifications subset'
-      },
-      payload: {
-          title: 'test notification title subset',
-          body: 'test notif body',
-          cta: '',
-          img: ''
-      },
-      recipients: ['0xCdBE6D076e05c5875D90fa35cc85694E1EAFBBd1', '0x1434A7882cDD877B398Df5b83c883e9571c65813'],
-      channel: channelAddress,
-      dev: true
+    IPFS: {
+        signer,
+        chainId: 42,
+        type: NOTIFICATION_TYPE.TARGETTED,
+        identityType: IDENTITY_TYPE.IPFS,
+        ipfsHash: 'bafkreicuttr5gpbyzyn6cyapxctlr7dk2g6fnydqxy6lps424mcjcn73we', // from BE devtools
+        notification: {
+            title: `[SDK-TEST] notification TITLE: ${timestamp}`,
+            body: `[sdk-test] notification BODY ${timestamp}`
+        },
+        payload: {
+            title: `[sdk-test] payload title ${timestamp}`,
+            body: `type:${NOTIFICATION_TYPE.TARGETTED} identity:${IDENTITY_TYPE.IPFS}`,
+            cta: '',
+            img: ''
+        },
+        recipients: '0xCdBE6D076e05c5875D90fa35cc85694E1EAFBBd1',
+        channel: testChannelAddress,
+        dev: true
     },
-    BROADCAST: {
-      signer,
-      chainId: 42,
-      type: NOTIFICATION_TYPE.BROADCAST,
-      storage: 2,
-      notification: {
-          title: 'sample header',
-          body: 'testing out the new send notifications broadcast'
-      },
-      payload: {
-          title: 'test notification title broadcast',
-          body: 'test notif body',
-          cta: '',
-          img: ''
-      },
-      channel: channelAddress,
-      dev: true
+    MINIMAL: {
+        signer,
+        chainId: 42,
+        type: NOTIFICATION_TYPE.TARGETTED,
+        identityType: IDENTITY_TYPE.MINIMAL,
+        notification: {
+            title: `[SDK-TEST] notification TITLE: ${timestamp}`,
+            body: `[sdk-test] notification BODY ${timestamp}`
+        },
+        payload: {
+            title: `[sdk-test] payload title ${timestamp}`,
+            body: `type:${NOTIFICATION_TYPE.TARGETTED} identity:${IDENTITY_TYPE.MINIMAL}`,
+            cta: '',
+            img: ''
+        },
+        recipients: '0xCdBE6D076e05c5875D90fa35cc85694E1EAFBBd1',
+        channel: testChannelAddress,
+        dev: true
+    },
+    GRAPH: {
+        signer,
+        chainId: 42,
+        type: NOTIFICATION_TYPE.TARGETTED,
+        identityType: IDENTITY_TYPE.SUBGRAPH,
+        graph: {
+          id: 'graph:aiswaryawalter/graph-poc-sample',
+          counter: 3
+        },
+        notification: {
+            title: `[SDK-TEST] notification TITLE: ${timestamp}`,
+            body: `[sdk-test] notification BODY ${timestamp}`
+        },
+        payload: {
+            title: `[sdk-test] payload title ${timestamp}`,
+            body: `type:${NOTIFICATION_TYPE.TARGETTED} identity:${IDENTITY_TYPE.SUBGRAPH}`,
+            cta: '',
+            img: ''
+        },
+        recipients: '0xCdBE6D076e05c5875D90fa35cc85694E1EAFBBd1',
+        channel: testChannelAddress,
+        dev: true
     }
+  }
 };
 
+async function trigger(input, name) {
+    console.log(`........${name}...starts............>>\n`);
+    try {
+        const apiResponse = await sendNotification(input);
+        console.log('apiResponse: ', apiResponse);
+    } finally {
+        console.log(`<<........${name}....ends...........\n`);
+    }
+}
 
 async function main() {
     try {
-        const apiResponse = await sendNotification(OPTIONS.TARGETTED); // or any Type
-        console.log('apiResponse: ', apiResponse);
+        console.log(`\n\nTEST code calling sendNotification() at ${timestamp}\n`);
+        await trigger(OPTIONS_MATRIX.TARGETTED.DIRECT_PAYLOAD, 'OPTIONS_MATRIX.DIRECT_PAYLOAD');
+        // await trigger(OPTIONS_MATRIX.TARGETTED.IPFS, 'OPTIONS_MATRIX.TARGETTED.IPFS');
+        // await trigger(OPTIONS_MATRIX.TARGETTED.MINIMAL, 'OPTIONS_MATRIX.TARGETTED.MINIMAL');
+        // await trigger(OPTIONS_MATRIX.TARGETTED.GRAPH, 'OPTIONS_MATRIX.TARGETTED.GRAPH');
     } catch (e) {
-        console.log('Error: ', e.message);
+        console.log('\n\nTest Error: ', e.message);
     }
 }
 
 main();
-
-```
-
-
-
-## API payloads generated for different Notification Types
-
-### TARGETTED
-
-```typescript
- {
-  verificationProof: 'eip712:0x88db75803a7c057a939c8b115862f18929a64da673a57639c7b96c0f7a3b09123d692f834a084bf632cdad969aac3cc9a3981cc144bb7463636208c3a7c761671c',
-  identity: '2+f66faeeaaf2d505e6c4b0c78f99e4da50778b91538b4c05888849d3b670616cf',
-  channel: '0x52f856A160733A860ae7DC98DC71061bE33A28b3',
-  source: 'ETH_TEST_KOVAN',
-  payload: {
-    notification: {
-      title: 'Sample header',
-      body: 'testing out the new send notifications'
-    },
-    data: {
-      acta: '',
-      aimg: '',
-      amsg: 'test notif body',
-      asub: 'test notification title',
-      type: '3'
-    },
-    recipients: '{"0xCdBE6D076e05c5875D90fa35cc85694E1EAFBBd1":null}'
-  }
-} 
-```
-
-### SUBSET
-
-```typescript
- {
-  verificationProof: 'eip712:0xe329bbd5159708ce822ef49a0f561c23bf8f28448b41fe4190a852ace10fe5523ccdad33ec0d8a5a27adb7883fe8f7a630adedb384a217804c72d33909d1589a1c',
-  identity: '2+c6a012bf5bf4851c2851b03aaf6264210100995020abdf60d04b420ebcb920e7',
-  channel: '0x52f856A160733A860ae7DC98DC71061bE33A28b3',
-  source: 'ETH_TEST_KOVAN',
-  payload: {
-    notification: {
-      title: 'Sample header',
-      body: 'testing out the new send notifications subset'
-    },
-    data: {
-      acta: '',
-      aimg: '',
-      amsg: 'test notif body',
-      asub: 'test notification title subset',
-      type: '4'
-    },
-    recipients: '{"0xCdBE6D076e05c5875D90fa35cc85694E1EAFBBd1":null,"0x1434A7882cDD877B398Df5b83c883e9571c65813":null}'
-  }
-} 
-```
-
-### BROADCAST
-
-```typescript
- {
-  verificationProof: 'eip712:0x3c139d496f129be7d4f48ad2ea6b9d06f577de5d73df31c604c785fdb4334166375323e46ce47a0be07c8974501c42daa4138b211170e4ecb83c690eb799ab4f1b',
-  identity: '2+3572aa98c54ff1b504771d22e2174b8ec474ce2aeb98638a1cfa8283771ecee2',
-  channel: '0x52f856A160733A860ae7DC98DC71061bE33A28b3',
-  source: 'ETH_TEST_KOVAN',
-  payload: {
-    notification: {
-      title: 'Sample header',
-      body: 'testing out the new send notifications broadcast'
-    },
-    data: {
-      acta: '',
-      aimg: '',
-      amsg: 'test notif body',
-      asub: 'test notification title broadcast',
-      type: '1'
-    },
-    recipients: '0x52f856A160733A860ae7DC98DC71061bE33A28b3'
-  }
-} 
-```
-
-### TARGETTED (secret) WIP
-
-```typescript
-{
-  "data": {
-    "acta": "",
-    "aimg": "",
-    "amsg": "Current BTC price is - 47,785.10USD",
-    "asub": "",
-    "type": "3",
-    "sectype": "aes+eip712"
-  },
-  "notification": {
-    "body": "Dropping payload directly on push nodes at LISCON 2021.",
-    "title": "EPNS x LISCON"
-  },
-  "recipients": {
-    "0x35B84d6848D16415177c64D64504663b998A6ab4": {
-      "secret": "0dsddo302320ndsd==03232kdk023nmdcsdjksfdk34fnm349340fnm3403fnm3493n34394"
-    }
-  }
-}
-```
-
-### SUBSET (secret) WIP
-
-```typescript
-{
-  "data": {
-    "acta": "",
-    "aimg": "",
-    "amsg": "Current BTC price is - 47,785.10USD",
-    "asub": "",
-    "type": "4",
-    "sectype": "aes+eip712"
-  },
-  "recipients": {
-    "0x35b84d6848d16415177c64d64504663b998a6ab4": {
-      "secret": "0dsddo302320ndsd==03232kdk023nmdcsdjksfdk34fnm349340fnm3403fnm3493n34394"
-    },
-    "0x28F1C7B4596D9db14f85c04DcBd867Bf4b14b811": {
-      "secret": "35345gdfg302320ndsd==03232kdk023nmdcsdjksfdk34fnm349340fnm3403fnm3493n34394"
-    },
-    "0xD9E0b968400c51F81E278a66645328fA79d1ed78": {
-      "secret": "j6765fg302320ndsd==03232kdk023nmdcsdjksfdk34fnm349340fnm3403fnm3493n34394"
-    }
-  },
-  "notification": {
-    "body": "Dropping payload directly on push nodes at LISCON 2021.",
-    "title": "EPNS x LISCON"
-  }
-}
 ```

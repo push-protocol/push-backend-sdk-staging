@@ -17,8 +17,8 @@ export const SOURCE_TYPES = {
   THE_GRAPH: 'THE_GRAPH'
 };
 
-export const STORAGE_TYPE = {
-  SMART_CONTRACT: 0,
+export const IDENTITY_TYPE = {
+  MINIMAL: 0,
   IPFS: 1,
   DIRECT_PAYLOAD: 2,
   SUBGRAPH: 3

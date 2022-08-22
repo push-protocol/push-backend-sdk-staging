@@ -2,7 +2,7 @@ export interface ISendNotificationInputOptions {
   signer: any;
   chainId: number;
   type: number;
-  storage: number;
+  identityType: number;
   notification: {
     title: string;
     body: string;
@@ -23,7 +23,6 @@ export interface ISendNotificationInputOptions {
     counter: number
   };
   ipfsHash?: string;
-  txHash?: string;
   dev?: boolean;
 }
 
@@ -42,5 +41,5 @@ export interface INotificationPayload {
     hidden?: boolean;
     sectype?: string;
   };
-  recipients: any;
+  // recipients: any;
 };
