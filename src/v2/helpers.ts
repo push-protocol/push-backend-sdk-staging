@@ -147,6 +147,7 @@ export async function getVerificationProof({
   payload,
   ipfsHash,
   graph = {},
+  uuid
 }: {
   signer: any,
   chainId: number,
@@ -156,6 +157,7 @@ export async function getVerificationProof({
   payload: any,
   ipfsHash?: string,
   graph?: any,
+  uuid: string
 }) {
 
   console.log('payload ---> \n\n', payload);
@@ -176,23 +178,22 @@ export async function getVerificationProof({
       data: `${identityType}+${notificationType}+${payload.notification.title}+${payload.notification.body}`,
     };
     signature = await signer._signTypedData(domain, type, message);
-    return `eip712v2:${signature}`;
-
+    return `eip712v2:${signature}::uid::${uuid}`;
   } else if (identityType === IDENTITY_TYPE.IPFS) {
     message = {
       data: `1+${ipfsHash}`,
     };
     signature = await signer._signTypedData(domain, type, message);
-    return `eip712v2:${signature}`;
+    return `eip712v2:${signature}::uid::${uuid}`;
   } else if (identityType === IDENTITY_TYPE.DIRECT_PAYLOAD) {
     const payloadJSON = JSON.stringify(payload);
     message = {
       data: `2+${payloadJSON}`,
     };
     signature = await signer._signTypedData(domain, type, message);
-    return `eip712v2:${signature}`;
+    return `eip712v2:${signature}::uid::${uuid}`;
   } else if (identityType === IDENTITY_TYPE.SUBGRAPH) {
-    return `graph:${graph?.id}+${graph?.counter}`;
+    return `graph:${graph?.id}+${graph?.counter}::uid::${uuid}`;
   }
 }
 
@@ -202,24 +203,22 @@ export function getPayloadIdentity({
   notificationType,
   ipfsHash,
   graph = {},
-  uuid
 } : {
   identityType: number,
   payload: INotificationPayload,
   notificationType?: number,
   ipfsHash?: string,
   graph?: any,
-  uuid: string
 }) {
   if (identityType === IDENTITY_TYPE.MINIMAL) {
-    return `0+${notificationType}+${payload.notification.title}+${payload.notification.body}::uid::${uuid}`;
+    return `0+${notificationType}+${payload.notification.title}+${payload.notification.body}`;
   } else if (identityType === IDENTITY_TYPE.IPFS) {
-    return `1+${ipfsHash}::uid::${uuid}`;
+    return `1+${ipfsHash}`;
   } else if (identityType === IDENTITY_TYPE.DIRECT_PAYLOAD) {
     const payloadJSON = JSON.stringify(payload);
-    return `2+${payloadJSON}::uid::${uuid}`;
+    return `2+${payloadJSON}`;
   } else if (identityType === IDENTITY_TYPE.SUBGRAPH) {
-    return `3+graph:${graph?.id}+${graph?.counter}::uid::${uuid}`;
+    return `3+graph:${graph?.id}+${graph?.counter}`;
   }
 }
 

@@ -44,6 +44,7 @@ export async function sendNotification(options: ISendNotificationInputOptions) {
       payload: notificationPayload,
       graph,
       ipfsHash,
+      uuid
     });
 
     const identity = getPayloadIdentity({
@@ -51,8 +52,7 @@ export async function sendNotification(options: ISendNotificationInputOptions) {
       payload: notificationPayload,
       notificationType: type,
       graph,
-      ipfsHash,
-      uuid
+      ipfsHash
     });
 
     const source = getSource(chainId, identityType);
