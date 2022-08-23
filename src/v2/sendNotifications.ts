@@ -86,7 +86,7 @@ export async function sendNotification(options: ISendNotificationInputOptions) {
     );
 
   } catch (err) {
-    console.error('[EPNS-SDK] - Error - sendNotification() - ', err);
+    console.error('[EPNS-SDK] - Error - sendNotification() - ', JSON.stringify(err));
     throw err;
   }
 }

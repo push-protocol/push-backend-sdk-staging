@@ -132,7 +132,7 @@ async function trigger(input, name) {
 async function main() {
     try {
         console.log(`\n\nTEST code calling sendNotification() at ${timestamp}\n`);
-        await trigger(OPTIONS_MATRIX.TARGETTED.DIRECT_PAYLOAD, 'OPTIONS_MATRIX.DIRECT_PAYLOAD');
+        await trigger(OPTIONS_MATRIX.TARGETTED.DIRECT_PAYLOAD, 'OPTIONS_MATRIX.TARGETTED.DIRECT_PAYLOAD');
         // await trigger(OPTIONS_MATRIX.TARGETTED.IPFS, 'OPTIONS_MATRIX.TARGETTED.IPFS');
         // await trigger(OPTIONS_MATRIX.TARGETTED.MINIMAL, 'OPTIONS_MATRIX.TARGETTED.MINIMAL');
         // await trigger(OPTIONS_MATRIX.TARGETTED.GRAPH, 'OPTIONS_MATRIX.TARGETTED.GRAPH');
