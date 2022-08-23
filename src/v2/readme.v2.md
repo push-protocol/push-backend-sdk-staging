@@ -1,72 +1,149 @@
-## INPUT from the CONSUMER to the SDK
+# Input for the SDK sendNotification()
 
-signer
-chainId
-type (notification type - BROADCAST, TARGETTED, SUBSET)
-storage (
-    storage type - 
-        0_SMART_CONTRACT
-        1_IPFS,
-        2_DIRECT_PAYLOAD,
-        3_SUBGRAPH
-)
-notification { title, body }
-payload { title, body, cta, img }
-recipients
-channel
+## When using in SERVER code
 
+```bash
+npm i @epnsproject/backend-sdk-staging
+```
 
-## INPUT from the SDK to the API
+```typescript
+const ethers = require('ethers');
+// local lib
+const { sendNotification } = require('./lib'); 
+// or direct npm package like
+// const { sendNotification } = require('@epnsproject/backend-sdk-staging');
 
-REQ BODY:
+const PK = 'd5797b255933f72a6a084fcfc0f5f4881defee8c1ae387197805647d0b10a8a0'; // PKey
+const Pkey = `0x${PK}`;
+const signer = new ethers.Wallet(Pkey);
+const testChannelAddress = '0xD8634C39BBFd4033c0d3289C4515275102423681';
 
-NEW verificationProof: 
-        SMART_CONTRACT => eip155:chainId:txHash
-        IPFS => eip712:signature
-        DIRECT_PAYLOAD => eip712:signature
-        SUBGRAPH => thegraph:<some_other_stuff>
+const NOTIFICATION_TYPE = {
+    BROADCAST: 1,
+    TARGETTED: 3,
+    SUBSET: 4
+};
 
-verificationProof: verificationType + signature 
-    (
-        verificationType => 
-            SMART_CONTRACT => eip155:chainId:txHash
-            IPFS => eip712:signature
-            DIRECT_PAYLOAD => eip712:signature
-            SUBGRAPH => thegraph:signature
-        
-        signature =>
-            EIP712 =>  
-                DOMAIN =>
-                    name => 'EPNS COMM V1',
-                    chainId => ON WHICHEVER CHAINID the sendNotification is called,
-                    verifyingContract => EPNS contract address
-                TYPE =>
-                    ?? need confirmation here ??
-                payload => 
-                    the below "payload" key which is sent.
+const IDENTITY_TYPE = {
+    MINIMAL: 0,
+    IPFS: 1,
+    DIRECT_PAYLOAD: 2,
+    SUBGRAPH: 3
+  };
 
-            (* any other type of signatures??)
-    )
-identity: storage + "payload" Hash -->
-    https://github.com/ethereum-push-notification-service/epns-push-service-dev/blob/main/src/devtools/payloads/devtools.verificationEIP712V2.mjs
-channel
-source:  
-    one of these ['ETH_MAINNET', 'ETH_TEST_KOVAN', 'POLYGON_MAINNET', 'POLYGON_TEST_MUMBAI'] based on sdkInput.chainId
-    what if there is no chainID ??
-<!-- payload {
-    notification: {
-        title: sdkInput.notification?.title,
-        body: sdkInput.notification?.body
+const timestamp = Date.now();
+
+/*
+ *  Example of What to pass as INPUTS to the sendNotification()
+ */
+
+const OPTIONS_MATRIX = {
+  TARGETTED: {
+    DIRECT_PAYLOAD:  {
+        signer,
+        chainId: 42,
+        type: NOTIFICATION_TYPE.TARGETTED,
+        identityType: IDENTITY_TYPE.DIRECT_PAYLOAD,
+        notification: {
+            title: `[SDK-TEST] notification TITLE: ${timestamp}`,
+            body: `[sdk-test] notification BODY ${timestamp}`
+        },
+        payload: {
+            title: `[sdk-test] payload title ${timestamp}`,
+            body: `type:${NOTIFICATION_TYPE.TARGETTED} identity:${IDENTITY_TYPE.DIRECT_PAYLOAD}`,
+            cta: '',
+            img: ''
+        },
+        recipients: '0xCdBE6D076e05c5875D90fa35cc85694E1EAFBBd1',
+        channel: testChannelAddress,
+        dev: true
     },
-    data: {
-        acta: sdkInput.payload.cta,
-        aimg: sdkInput.payload.img,
-        amsg: sdkInput.payload.body,
-        asub: sdkInput.payload.title,
-        type: sdkInput.type,
-        etime: sdkInput.expiry,
-        hidden: sdkInput.hidden,
-        sectype: sdkInput.payload.sectype,
+    IPFS: {
+        signer,
+        chainId: 42,
+        type: NOTIFICATION_TYPE.TARGETTED,
+        identityType: IDENTITY_TYPE.IPFS,
+        ipfsHash: 'bafkreicuttr5gpbyzyn6cyapxctlr7dk2g6fnydqxy6lps424mcjcn73we', // from BE devtools
+        notification: {
+            title: `[SDK-TEST] notification TITLE: ${timestamp}`,
+            body: `[sdk-test] notification BODY ${timestamp}`
+        },
+        payload: {
+            title: `[sdk-test] payload title ${timestamp}`,
+            body: `type:${NOTIFICATION_TYPE.TARGETTED} identity:${IDENTITY_TYPE.IPFS}`,
+            cta: '',
+            img: ''
+        },
+        recipients: '0xCdBE6D076e05c5875D90fa35cc85694E1EAFBBd1',
+        channel: testChannelAddress,
+        dev: true
+    },
+    MINIMAL: {
+        signer,
+        chainId: 42,
+        type: NOTIFICATION_TYPE.TARGETTED,
+        identityType: IDENTITY_TYPE.MINIMAL,
+        notification: {
+            title: `[SDK-TEST] notification TITLE: ${timestamp}`,
+            body: `[sdk-test] notification BODY ${timestamp}`
+        },
+        payload: {
+            title: `[sdk-test] payload title ${timestamp}`,
+            body: `type:${NOTIFICATION_TYPE.TARGETTED} identity:${IDENTITY_TYPE.MINIMAL}`,
+            cta: '',
+            img: ''
+        },
+        recipients: '0xCdBE6D076e05c5875D90fa35cc85694E1EAFBBd1',
+        channel: testChannelAddress,
+        dev: true
+    },
+    GRAPH: {
+        signer,
+        chainId: 42,
+        type: NOTIFICATION_TYPE.TARGETTED,
+        identityType: IDENTITY_TYPE.SUBGRAPH,
+        graph: {
+          id: 'graph:aiswaryawalter/graph-poc-sample',
+          counter: 3
+        },
+        notification: {
+            title: `[SDK-TEST] notification TITLE: ${timestamp}`,
+            body: `[sdk-test] notification BODY ${timestamp}`
+        },
+        payload: {
+            title: `[sdk-test] payload title ${timestamp}`,
+            body: `type:${NOTIFICATION_TYPE.TARGETTED} identity:${IDENTITY_TYPE.SUBGRAPH}`,
+            cta: '',
+            img: ''
+        },
+        recipients: '0xCdBE6D076e05c5875D90fa35cc85694E1EAFBBd1',
+        channel: testChannelAddress,
+        dev: true
     }
-    recipients: stringify({ addr: value }) /* ?? confirm this */
-} -->
+  }
+};
+
+async function trigger(input, name) {
+    console.log(`........${name}...starts............>>\n`);
+    try {
+        const apiResponse = await sendNotification(input);
+        console.log('apiResponse: ', apiResponse);
+    } finally {
+        console.log(`<<........${name}....ends...........\n`);
+    }
+}
+
+async function main() {
+    try {
+        console.log(`\n\nTEST code calling sendNotification() at ${timestamp}\n`);
+        await trigger(OPTIONS_MATRIX.TARGETTED.DIRECT_PAYLOAD, 'OPTIONS_MATRIX.TARGETTED.DIRECT_PAYLOAD');
+        // await trigger(OPTIONS_MATRIX.TARGETTED.IPFS, 'OPTIONS_MATRIX.TARGETTED.IPFS');
+        // await trigger(OPTIONS_MATRIX.TARGETTED.MINIMAL, 'OPTIONS_MATRIX.TARGETTED.MINIMAL');
+        // await trigger(OPTIONS_MATRIX.TARGETTED.GRAPH, 'OPTIONS_MATRIX.TARGETTED.GRAPH');
+    } catch (e) {
+        console.log('\n\nTest Error: ', e.message);
+    }
+}
+
+main();
+```
