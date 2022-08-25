@@ -41,5 +41,5 @@ export interface INotificationPayload {
     hidden?: boolean;
     sectype?: string;
   };
-  // recipients: any;
+  recipients: any;
 };

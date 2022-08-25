@@ -5,11 +5,13 @@ import {
   getPayloadForAPIInput,
   getPayloadIdentity,
   getRecipients,
+  getRecipientFieldForAPIPayload,
   getVerificationProof,
   getSource,
   getCAIPFormat,
   getUUID
 } from './helpers';
+import { NOTIFICATION_TYPE } from './constants';
 
 
 export async function sendNotification(options: ISendNotificationInputOptions) {
@@ -29,6 +31,11 @@ export async function sendNotification(options: ISendNotificationInputOptions) {
     } = options || {};
 
     const uuid = getUUID();
+
+    if (type === NOTIFICATION_TYPE.BROADCAST && !channel) {
+      throw '[EPNS-SDK] - Error - sendNotification() - "channel" mandatory for Notification Type: Broadcast!';
+    }
+
     const _channel = channel || signer.address;
 
     const epnsConfig = getEpnsConfig(chainId, dev);
@@ -62,7 +69,13 @@ export async function sendNotification(options: ISendNotificationInputOptions) {
       identity,
       channel: getCAIPFormat(chainId, _channel),
       source,
-      recipient: _recipients
+      /** note this recipient key has a different expectation from the BE API, see the funciton for more */
+      recipient: getRecipientFieldForAPIPayload({
+        chainId,
+        notificationType: type,
+        recipients: recipients || '',
+        channel: _channel
+      })
     };
 
     const requestURL = `${epnsConfig.API_BASE_URL}/v1/payloads/`;

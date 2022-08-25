@@ -57,7 +57,7 @@ export function getPayloadForAPIInput(
       ...(inputOptions?.hidden && { hidden: inputOptions?.hidden }),
       ...(inputOptions?.payload?.sectype && { sectype: inputOptions?.payload?.sectype })
     },
-    // recipients: recipients
+    recipients: recipients
   };
 }
 
@@ -111,11 +111,11 @@ export async function getRecipients(
   /**
    * NON-SECRET FLOW
    */
+
     if (notificationType === NOTIFICATION_TYPE.BROADCAST) {
       if (!recipients) {
         return getCAIPFormat(chainId, channel || '');
       }
-      return recipients;
     } else if (notificationType === NOTIFICATION_TYPE.TARGETTED) {
       if (typeof recipients === 'string') {
         addressInCAIP = getCAIPFormat(chainId, recipients);
@@ -123,19 +123,41 @@ export async function getRecipients(
       }
     } else if (notificationType === NOTIFICATION_TYPE.SUBSET) {
       if (Array.isArray(recipients)) {
-        const recipientObject =  recipients.reduce((_recipients, _rAddress) => {
+        const recipientObject = recipients.reduce((_recipients, _rAddress) => {
           addressInCAIP = getCAIPFormat(chainId, _rAddress);
          return {
           ..._recipients,
           [addressInCAIP]: null
          };
         }, {});
-
         return recipientObject;
       }
     }
   }
   return recipients;
+}
+
+export function getRecipientFieldForAPIPayload({
+  chainId,
+  notificationType,
+  recipients,
+  channel,
+} : {
+  chainId: number,
+  notificationType: number,
+  recipients: string | [string],
+  channel: string
+}) {
+  if (
+      notificationType === NOTIFICATION_TYPE.BROADCAST ||
+      notificationType === NOTIFICATION_TYPE.SUBSET
+    ) {
+    return getCAIPFormat(chainId, channel);
+  }
+
+  if (notificationType === NOTIFICATION_TYPE.TARGETTED && typeof recipients === 'string') {
+    return getCAIPFormat(chainId, recipients);
+  }
 }
 
 export async function getVerificationProof({
@@ -160,7 +182,7 @@ export async function getVerificationProof({
   uuid: string
 }) {
 
-  console.log('payload ---> \n\n', payload);
+  // console.log('payload ---> \n\n', payload);
   
   const type = {
     Data: [{ name: 'data', type: 'string' }]
@@ -193,7 +215,11 @@ export async function getVerificationProof({
     signature = await signer._signTypedData(domain, type, message);
     return `eip712v2:${signature}::uid::${uuid}`;
   } else if (identityType === IDENTITY_TYPE.SUBGRAPH) {
-    return `graph:${graph?.id}+${graph?.counter}::uid::${uuid}`;
+    message = {
+      data: `3+graph:${graph?.id}+${graph?.counter}`,
+    };
+    signature = await signer._signTypedData(domain, type, message);
+    return `eip712v2:${signature}::uid::${uuid}`;
   }
 }
 
