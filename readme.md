@@ -4,7 +4,7 @@
   
 
 ## About
-This module is used to send notifications to  [EPNS](http://www.epns.io/)  channels easy. It Provides an abstraction layer above advanced internal EPNS notification functions.
+This module is used to send notifications to  [PUSH](http://www.epns.io/)  channels easy. It Provides an abstraction layer above advanced internal PUSH notification functions.
 
 It is written in typescript and requires node v10.0.0 or higher. Most features will work with nodejs v6.0.0 and higher but using older versions than v10.0.0 is not recommended.
 
@@ -15,7 +15,7 @@ npm install @epnsproject/backend-sdk-staging
 ```
 
 ## Usage
-In order to use this package, [you must first have created a channel at EPNS](http://staging-app.epns.io/).
+In order to use this package, [you must first have created a channel at PUSH Protocol](http://staging-app.epns.io/).
 Then note the private key of the account you used to create the channel, because we would be using it in this tutorial
 ```typescript
 // Import the required packages
