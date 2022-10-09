@@ -15,7 +15,7 @@ npm install @epnsproject/backend-sdk-staging
 ```
 
 ## Usage
-In order to use this package, [you must first have created a channel at PUSH Protocol](http://staging-app.epns.io/).
+In order to use this package, [you must first have created a channel at PUSH Protocol](https://app.push.org/#/channels).
 Then note the private key of the account you used to create the channel, because we would be using it in this tutorial
 ```typescript
 // Import the required packages
